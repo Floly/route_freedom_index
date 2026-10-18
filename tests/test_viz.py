@@ -61,8 +61,8 @@ def test_layers(result):
     assert len(ell) == demo["pair_id"].nunique()
 
 
-def test_shortest_edges_total_at_least_dstar(result):
-    """Edges tagged shortest form a connected set containing a shortest path s -> t."""
+def test_every_demo_pair_has_shortest_edges(result):
+    """Each demo pair shows at least one edge on a shortest path."""
     demo = build_layers(result)["demo"]
     assert (demo[demo["status"] == "shortest"].groupby("pair_id").size() >= 1).all()
 
