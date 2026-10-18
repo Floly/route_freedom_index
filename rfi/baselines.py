@@ -44,16 +44,21 @@ def mean_circuity(net: Network) -> float:
     return float(net.length[keep][ok].sum() / straight[ok].sum())
 
 
+def street_bearings(net: Network) -> np.ndarray:
+    """Bearings (degrees clockwise from north) of interior edges, each edge in both directions."""
+    keep = net.in_interior[net.u] & net.in_interior[net.v] & (net.u != net.v)
+    d = net.xy[net.v[keep]] - net.xy[net.u[keep]]
+    bearing = np.degrees(np.arctan2(d[:, 0], d[:, 1])) % 360
+    return np.concatenate([bearing, (bearing + 180) % 360])
+
+
 def orientation_entropy(net: Network) -> float:
     """Shannon entropy (nats) of street bearings in 36 bins of 10 degrees (Boeing 2019).
 
     Every edge counts in both directions; bins are shifted so N/E/S/W sit at bin centres; edges
     are unweighted; interior edges only. Max is ln(36) = 3.58 (all directions equally common).
     """
-    keep = net.in_interior[net.u] & net.in_interior[net.v] & (net.u != net.v)
-    d = net.xy[net.v[keep]] - net.xy[net.u[keep]]
-    bearing = np.degrees(np.arctan2(d[:, 0], d[:, 1])) % 360
-    bearing = np.concatenate([bearing, (bearing + 180) % 360])
+    bearing = street_bearings(net)
     width = 360 / ORIENTATION_BINS
     counts = np.bincount(((bearing + width / 2) % 360 // width).astype(int),
                          minlength=ORIENTATION_BINS)
