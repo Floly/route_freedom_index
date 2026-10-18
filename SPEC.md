@@ -94,6 +94,8 @@ Also report, outside the score: pairs per bin, IQR per bin, median circuity d* /
 | `MAX_AREA_KM2_WARN` | 30 | parser warns above this interior size (M1 Air budget) |
 | `ELLIPSE_TOL_M` | 1e-3 | float tolerance on budget tests: ellipse uses `+ ELLIPSE_TOL_M`, usable uses `+ ELLIPSE_TOL_M / 2` |
 | `R_TOL` | 1e-6 | tolerance for the `r ≤ 1 + R_TOL` check |
+| `ELLIPSE_BOUNDARY_PTS` | 32 | points on the ellipse boundary tested against the download polygon (`boundary` exclusion) |
+| `MIN_DIAMETER_WARN_M` | 3000 | parser warns when the interior is narrower than this |
 
 The validation notebook (Part 3) may override constants (e.g. `SNAP_M`, `DROP_SIDEWALKS`) for robustness checks. The API never exposes them.
 
@@ -288,7 +290,7 @@ edges["length_m"] = edges.geometry.length
 - Drop and count pairs by exclusion reason in `Result.diagnostics`:
   - `unreachable`: d* is inf
   - `too_circuitous`: d* > `CIRCUITY_CAP · euclid`
-  - `boundary`: the ellipse isn't inside the download area. Checked through an optional predicate passed by the caller; with no predicate (synthetic graphs) the count is 0.
+  - `boundary`: the ellipse isn't inside the download area. Checked through an optional predicate passed by the caller; with no predicate (synthetic graphs) the count is 0. The predicate samples `ELLIPSE_BOUNDARY_PTS` points on the ellipse boundary and requires all of them inside the (prepared) download polygon.
 - Subsample the remaining pairs to `MAX_PAIRS_PER_BIN` per bin (seeded).
 - Report drop counts **per bin**. Warn if `boundary` drops exceed `BOUNDARY_DROP_WARN` in any bin, since dropped pairs are mostly circuitous ones and their loss biases RFI upward.
 

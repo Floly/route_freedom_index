@@ -16,6 +16,8 @@ N_DEMO_PAIRS = 20
 MAX_AREA_KM2_WARN = 30
 ELLIPSE_TOL_M = 1e-3
 R_TOL = 1e-6
+ELLIPSE_BOUNDARY_PTS = 32
+MIN_DIAMETER_WARN_M = 3000
 
 
 def download_buffer_m(eps: float) -> float:
