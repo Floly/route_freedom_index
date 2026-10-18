@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-map = ["keplergl"]
+map = ["keplergl", "setuptools<81"]  # keplergl imports pkg_resources
 dev = ["pytest", "ruff"]
 notebook = ["jupyterlab", "matplotlib"]
 

@@ -7,7 +7,7 @@ How freely can you wander a street network? RFI scores an area by how much of th
 conda create -n rfi -c conda-forge python=3.12 geopandas scipy pyarrow
 conda activate rfi
 pip install -e ".[dev]"            # core + tests
-pip install -e ".[dev,map]"        # + kepler.gl map export
+pip install -e ".[dev,map]"        # + kepler.gl map export (needs internet to open: JS and basemap)
 pip install -e ".[dev,map,notebook]"
 ```
 
