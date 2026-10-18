@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rfi"
+version = "0.1.0"
+description = "Route Freedom Index: how freely you can wander a street network"
+readme = "README.md"
+requires-python = ">=3.11"  # check against city2graph's supported versions
+dependencies = [
+    "city2graph",      # base install only; no torch extras
+    "geopandas",
+    "shapely>=2",
+    "pyproj",
+    "numpy",
+    "pandas",
+    "scipy",
+    "pyarrow",
+    "typer",
+    "psutil",
+]
+
+[project.optional-dependencies]
+map = ["keplergl"]
+dev = ["pytest", "ruff"]
+notebook = ["jupyterlab", "matplotlib"]
+
+[project.scripts]
+rfi = "rfi.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["rfi"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
