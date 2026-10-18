@@ -8,7 +8,10 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import shapely
 
+from rfi.parser.area import _project
+from rfi.sampling import Network, from_edges
 from rfi.utils.log import RFILogger
 
 log = RFILogger(__name__)
@@ -49,6 +52,17 @@ class Result:
             self.pairs.to_parquet(out / "pairs.parquet")
             self.edges.to_parquet(out / "edges.parquet")
         return out
+
+    def network(self) -> Network:
+        """Routing network rebuilt from the node ids and coordinates stored in `edges`."""
+        e = self.edges
+        u, v = e["u"].to_numpy(), e["v"].to_numpy()
+        xy = np.zeros((int(max(u.max(), v.max())) + 1, 2))
+        xy[u] = e[["ux", "uy"]].to_numpy()
+        xy[v] = e[["vx", "vy"]].to_numpy()
+        interior = _project(shapely.from_wkt(self.meta["interior_wkt"]), 4326, e.crs)
+        in_interior = shapely.contains_xy(interior, xy[:, 0], xy[:, 1])
+        return from_edges(xy, u, v, e["length_m"].to_numpy(), in_interior)
 
     @classmethod
     def load(cls, out_dir) -> "Result":

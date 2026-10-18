@@ -98,6 +98,19 @@ poly.explore()                  # confirm it's where you think it is
 ## Method in one paragraph
 Sample pairs of intersections inside the area. For each pair with shortest walking distance d*, a street is **usable** if the best walk through it is at most (1+ε)·d*. That takes two shortest-path trees, with no path enumeration. Every usable street lies inside the ellipse with the two points as foci and focal-sum (1+ε)·d*. The per-pair score is the share of street length inside that ellipse that is usable, between 0 and 1. The area score is the median per distance bin (300–750, 750–1500, 1500–3000 m), averaged over bins. Data: Overture Maps via [city2graph](https://city2graph.net).
 
+## Validation
+`notebooks/validation.ipynb` checks the metric on synthetic graphs (Part A) and on the polygons in
+`polygons/` (Part B): stability over seeds, `eps`, `SNAP_M` and `DROP_SIDEWALKS`; a ranked bar chart
+of all places; and Spearman and partial correlations of RFI with the baselines in
+`rfi/baselines.py` (intersection density, mean circuity, orientation entropy, link-node ratio,
+pedshed ratio, route directness, redundancy). Real-data results are cached in `results/validation/`.
+
+The Sevtsuk redundancy baseline is an **operational reconstruction**, because the exact UNA formula
+is not published. For a pair with shortest distance d\* and budget B = (1+ε)·d\*, with P the simple
+s-t paths of length ≤ B: `RC = |P|`, `RI_sum = Σ len(p) / d*`, `RI_union = len(∪ edges(p)) / d*`.
+It runs on 100 short and medium pairs, at most 10 000 paths and 5 s per pair; pairs that hit a limit
+are flagged `capped`.
+
 ## Limitations
 - Structural only: ignores land use, safety, sidewalk quality, slope, crossings and traffic.
 - Depends on Overture/OSM completeness for footpaths.

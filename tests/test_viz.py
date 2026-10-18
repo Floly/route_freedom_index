@@ -9,7 +9,7 @@ from rfi import constants as C
 from rfi.metric import score_network
 from rfi.result import Result
 from rfi.viz.config import kepler_config
-from rfi.viz.export import build_layers, network_from_result
+from rfi.viz.export import build_layers
 from tests.graphs import grid
 
 runner = CliRunner()
@@ -38,8 +38,9 @@ def result(monkeypatch):
 
 
 def test_network_roundtrip_from_edges(result):
-    net = network_from_result(result)
+    net = result.network()
     assert len(net.u) == len(result.edges)
+    assert net.in_interior.any()
     # node coordinates stored on the edges reproduce edge lengths
     e = result.edges
     d = np.hypot(e["ux"] - e["vx"], e["uy"] - e["vy"])

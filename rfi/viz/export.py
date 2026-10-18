@@ -13,7 +13,7 @@ from rfi import constants as C
 from rfi.metric import pair_score
 from rfi.parser.area import _project
 from rfi.result import Result
-from rfi.sampling import Network, from_edges
+from rfi.sampling import Network
 from rfi.utils.log import RFILogger
 
 log = RFILogger(__name__)
@@ -21,16 +21,6 @@ log = RFILogger(__name__)
 ELLIPSE_PTS = 64
 SIMPLIFY_M = 1.0
 COORD_PRECISION = 1e-6  # degrees, ~0.1 m
-
-
-def network_from_result(res: Result) -> Network:
-    """Rebuild the routing network from the node ids and coordinates stored in res.edges."""
-    e = res.edges
-    u, v = e["u"].to_numpy(), e["v"].to_numpy()
-    xy = np.zeros((int(max(u.max(), v.max())) + 1, 2))
-    xy[u] = e[["ux", "uy"]].to_numpy()
-    xy[v] = e[["vx", "vy"]].to_numpy()
-    return from_edges(xy, u, v, e["length_m"].to_numpy())
 
 
 def _wgs84(gdf: gpd.GeoDataFrame, simplify_m=0.0) -> gpd.GeoDataFrame:
@@ -114,7 +104,7 @@ def _demo_layer(res: Result, net: Network, crs) -> gpd.GeoDataFrame:
 def build_layers(res: Result) -> dict[str, gpd.GeoDataFrame]:
     """The four datasets of the map, all EPSG:4326."""
     crs = res.edges.crs
-    net = network_from_result(res)
+    net = res.network()
     streets = res.edges[["length_m", "edge_freedom", "geometry"]].copy()
     if "class" in res.edges:
         streets["class"] = res.edges["class"].astype(str)
