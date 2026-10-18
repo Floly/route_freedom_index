@@ -36,7 +36,7 @@ def _latest_release():
         from overturemaps.core import get_latest_release
 
         return get_latest_release()
-    except Exception as err:  # offline or API change: fall back to the download date
+    except Exception as err:  # noqa: BLE001  offline or API change: fall back to the date
         log.warning("could not read the latest Overture release", error=str(err))
         return None
 

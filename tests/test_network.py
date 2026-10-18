@@ -72,8 +72,8 @@ def test_download_is_cached(tmp_path, monkeypatch):
     monkeypatch.setattr(C, "CACHE_DIR", str(tmp_path))
     monkeypatch.setattr(nw, "_latest_release", lambda: "2099-01-01.0")
     poly = box(2.15, 41.38, 2.18, 41.40)
-    seg1, con1, meta1 = nw._download(poly)
-    seg2, con2, meta2 = nw._download(poly)
+    seg1, _, meta1 = nw._download(poly)
+    seg2, _, meta2 = nw._download(poly)
     assert len(calls) == 1 and calls[0]["keep_outer_neighbors"] is True
     assert calls[0]["types"] == ["segment", "connector"] and calls[0]["release"] == "2099-01-01.0"
     assert len(seg1) == len(seg2) == 1 and meta1 == meta2
@@ -115,7 +115,7 @@ def test_build_network_offline(monkeypatch):
     assert len(net.xy) == 25 and len(net.u) == 40
     assert built.meta["overture_release"] == "test"
     assert net.in_interior.sum() > 0
-    assert [s["step"] for s in built.cleaning_stats][0] == "download"
+    assert built.cleaning_stats[0]["step"] == "download"
     assert built.cleaning_stats[-1]["nodes"] == 25
     assert len(built.edges) == len(net.u) and np.isclose(built.edges["length_m"].sum(), net.length.sum())
     assert callable(built.ellipse_ok)
