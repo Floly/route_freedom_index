@@ -96,6 +96,7 @@ Also report, outside the score: pairs per bin, IQR per bin, median circuity d* /
 | `R_TOL` | 1e-6 | tolerance for the `r ≤ 1 + R_TOL` check |
 | `ELLIPSE_BOUNDARY_PTS` | 32 | points on the ellipse boundary tested against the download polygon (`boundary` exclusion) |
 | `MIN_DIAMETER_WARN_M` | 3000 | parser warns when the interior is narrower than this |
+| `CACHE_DIR` | "cache" | download cache folder (relative to the working directory) |
 
 The validation notebook (Part 3) may override constants (e.g. `SNAP_M`, `DROP_SIDEWALKS`) for robustness checks. The API never exposes them.
 

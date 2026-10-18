@@ -18,6 +18,7 @@ ELLIPSE_TOL_M = 1e-3
 R_TOL = 1e-6
 ELLIPSE_BOUNDARY_PTS = 32
 MIN_DIAMETER_WARN_M = 3000
+CACHE_DIR = "cache"
 
 
 def download_buffer_m(eps: float) -> float:
