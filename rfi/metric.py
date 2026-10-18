@@ -35,26 +35,38 @@ def score_pairs(net: Network, dist, pairs, eps: float):
             U[k], A[k], usable, edge_in = pair_score(net, dist[rs], dist[rt], s, t, eps)
             usable_cnt += usable
             ellipse_cnt += edge_in
-    pairs = pairs.assign(U=U, A=A, r=np.where(A > 0, U / np.where(A > 0, A, 1), np.nan))
+    pairs = pairs.assign(U=U, A=A, r=np.where(A > 0, U / np.where(A > 0, A, 1), np.nan),
+                         u_over_dstar=U / pairs["dstar"].to_numpy())
     n_bad = int((pairs["r"] > 1 + C.R_TOL).sum())
     if n_bad:
         log.warning("r > 1: bug or snapping artefact", pairs=n_bad, max_r=float(pairs["r"].max()))
     return pairs, usable_cnt, ellipse_cnt, {"r_gt_1": n_bad}
 
 
+def _quartiles(x):
+    return np.percentile(x, [25, 50, 75]) if len(x) else (np.nan,) * 3
+
+
 def area_score(pairs) -> dict:
-    """RFI = mean of per-bin median r over bins with >= MIN_PAIRS_PER_BIN pairs."""
+    """RFI = mean of per-bin median r over bins with >= MIN_PAIRS_PER_BIN pairs.
+
+    `redundancy` is the same aggregation of U / d* (usable street length per metre of shortest
+    path). It grows with trip length, so read it per bin; the mean over bins mixes lengths.
+    """
     bins = []
     for b, (lo, hi) in enumerate(C.DIST_BINS):
         p = pairs[pairs["bin"] == b]
-        q25, q50, q75 = np.percentile(p["r"], [25, 50, 75]) if len(p) else (np.nan,) * 3
+        q25, q50, q75 = _quartiles(p["r"])
+        u25, u50, u75 = _quartiles(p["u_over_dstar"])
         bins.append({"bin": b, "range_m": (lo, hi), "n_pairs": len(p), "median_r": q50,
-                     "iqr_r": q75 - q25, "median_circuity": float(np.median(p["dstar"] / p["euclid"]))
+                     "iqr_r": q75 - q25, "median_u_over_dstar": u50, "iqr_u_over_dstar": u75 - u25,
+                     "median_circuity": float(np.median(p["dstar"] / p["euclid"]))
                      if len(p) else np.nan, "used": len(p) >= C.MIN_PAIRS_PER_BIN})
-    used = [x["median_r"] for x in bins if x["used"]]
-    score = float(np.mean(used)) if used else float("nan")
+    used = [x for x in bins if x["used"]]
+    score = float(np.mean([x["median_r"] for x in used])) if used else float("nan")
+    redundancy = float(np.mean([x["median_u_over_dstar"] for x in used])) if used else float("nan")
     circuity = float(np.median(pairs["dstar"] / pairs["euclid"])) if len(pairs) else float("nan")
-    return {"score": score, "bins": bins, "circuity": circuity}
+    return {"score": score, "redundancy": redundancy, "bins": bins, "circuity": circuity}
 
 
 def score_network(net: Network, eps: float = 0.1, seed: int = 0, ellipse_ok=None) -> dict:

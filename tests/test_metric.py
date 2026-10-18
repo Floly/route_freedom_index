@@ -112,3 +112,22 @@ def test_small_bins_dropped(monkeypatch):
     res = _rfi(graphs.grid(n=15))
     assert np.isnan(res["score"])
     assert res["bins"] and all(not b["used"] for b in res["bins"])
+
+
+def test_redundancy_is_u_over_dstar_aggregated_like_the_score():
+    res = _rfi(graphs.grid())
+    p = res["pairs"]
+    np.testing.assert_allclose(p["u_over_dstar"], p["U"] / p["dstar"])
+    used = [b for b in res["bins"] if b["used"]]
+    assert used
+    for b in used:
+        assert b["median_u_over_dstar"] == pytest.approx(
+            p.loc[p["bin"] == b["bin"], "u_over_dstar"].median())
+    assert res["redundancy"] == pytest.approx(np.mean([b["median_u_over_dstar"] for b in used]))
+
+
+def test_redundancy_orders_grid_above_tree_and_grows_with_trip_length():
+    full, tree = _rfi(graphs.grid()), _rfi(graphs.tree())
+    assert full["redundancy"] > tree["redundancy"]
+    med = [b["median_u_over_dstar"] for b in full["bins"] if b["used"]]
+    assert med == sorted(med) and med[-1] > med[0]  # U / d* grows with d*, so read it per bin

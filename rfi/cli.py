@@ -69,10 +69,12 @@ def score(
     except (ValueError, TypeError) as err:
         raise typer.BadParameter(str(err)) from err
     res.save(out)
-    typer.echo(f"RFI = {res.score:.4f}  (eps={eps}, seed={seed}, {res.meta['runtime_s']} s)")
+    typer.echo(f"RFI = {res.score:.4f}  U/d* = {res.redundancy:.3f}  "
+               f"(eps={eps}, seed={seed}, {res.meta['runtime_s']} s)")
     for b in res.bins:
         mark = "" if b["used"] else "  [dropped]"
-        typer.echo(f"  bin {b['range_m']}: n={b['n_pairs']} median_r={b['median_r']:.4f}{mark}")
+        typer.echo(f"  bin {b['range_m']}: n={b['n_pairs']} median_r={b['median_r']:.4f} "
+                   f"median_U/d*={b['median_u_over_dstar']:.3f}{mark}")
     typer.echo(f"saved to {out}")
 
 

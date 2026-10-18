@@ -44,7 +44,7 @@ def rfi(area, eps: float = 0.1, seed: int = 0) -> Result:
             "area_input": _area_key(area), "interior_wkt": interior.polygon.wkt,
             "download_wkt": interior.download_geometry(eps).wkt,
             "runtime_s": round(time.perf_counter() - t0, 2)}
-    log.info("done", score=res["score"], runtime_s=meta["runtime_s"])
+    log.info("done", score=res["score"], redundancy=res["redundancy"], runtime_s=meta["runtime_s"])
     return Result(score=res["score"], bins=res["bins"], circuity=res["circuity"],
                   pairs=res["pairs"], edges=edges, cleaning_stats=built.cleaning_stats,
-                  diagnostics=res["diagnostics"], meta=meta)
+                  diagnostics=res["diagnostics"], meta=meta, redundancy=res["redundancy"])

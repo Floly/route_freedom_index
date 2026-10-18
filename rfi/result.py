@@ -16,7 +16,8 @@ from rfi.utils.log import RFILogger
 
 log = RFILogger(__name__)
 
-_JSON_FIELDS = ("score", "bins", "circuity", "cleaning_stats", "diagnostics", "meta")
+_JSON_FIELDS = ("score", "redundancy", "bins", "circuity", "cleaning_stats", "diagnostics",
+                "meta")
 
 
 def _plain(x):
@@ -35,13 +36,14 @@ def _plain(x):
 @dataclass
 class Result:
     score: float
-    bins: list  # per-bin stats: range_m, n_pairs, median_r, iqr_r, median_circuity, used
+    bins: list  # per-bin stats: range_m, n_pairs, median_r, iqr_r, median_u_over_dstar, ..., used
     circuity: float  # median d* / euclid over all kept pairs
     pairs: pd.DataFrame
     edges: gpd.GeoDataFrame  # projected CRS, with edge_freedom
     cleaning_stats: list
     diagnostics: dict
     meta: dict
+    redundancy: float = math.nan  # U / d*, aggregated like the score (per-bin median, then mean)
 
     def save(self, out_dir) -> Path:
         out = Path(out_dir)
@@ -70,11 +72,12 @@ class Result:
         data = json.loads((out / "result.json").read_text())
         for b in data["bins"]:  # JSON null -> NaN, list -> tuple, as produced by the pipeline
             b["range_m"] = tuple(b["range_m"])
-            for k in ("median_r", "iqr_r", "median_circuity"):
-                if b[k] is None:
+            for k in ("median_r", "iqr_r", "median_circuity", "median_u_over_dstar",
+                      "iqr_u_over_dstar"):
+                if b.get(k) is None:  # None: NaN saved as null, or a result saved before U/d*
                     b[k] = math.nan
-        for k in ("score", "circuity"):
-            if data[k] is None:
+        for k in ("score", "circuity", "redundancy"):
+            if data.get(k) is None:
                 data[k] = math.nan
         return cls(pairs=pd.read_parquet(out / "pairs.parquet"),
                    edges=gpd.read_parquet(out / "edges.parquet"), **data)

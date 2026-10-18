@@ -19,7 +19,7 @@ rfi map   --point 41.3910,2.1650 --radius 1500 --out results/eixample/map.html
 ```python
 from rfi import rfi
 res = rfi({"point": (41.3910, 2.1650), "radius_m": 1500}, eps=0.1)
-print(res.score)
+print(res.score, res.redundancy)   # RFI, and U/d* (also saved by res.save / rfi score)
 ```
 
 ## Defining an area
@@ -96,7 +96,7 @@ poly.explore()                  # confirm it's where you think it is
 ```
 
 ## Method in one paragraph
-Sample pairs of intersections inside the area. For each pair with shortest walking distance d*, a street is **usable** if the best walk through it is at most (1+ε)·d*. That takes two shortest-path trees, with no path enumeration. Every usable street lies inside the ellipse with the two points as foci and focal-sum (1+ε)·d*. The per-pair score is the share of street length inside that ellipse that is usable, between 0 and 1. The area score is the median per distance bin (300–750, 750–1500, 1500–3000 m), averaged over bins. Data: Overture Maps via [city2graph](https://city2graph.net).
+Sample pairs of intersections inside the area. For each pair with shortest walking distance d*, a street is **usable** if the best walk through it is at most (1+ε)·d*. That takes two shortest-path trees, with no path enumeration. Every usable street lies inside the ellipse with the two points as foci and focal-sum (1+ε)·d*. The per-pair score is the share of street length inside that ellipse that is usable, between 0 and 1. The area score is the median per distance bin (300–750, 750–1500, 1500–3000 m), averaged over bins. Alongside it the tool saves the **redundancy U/d\***: usable street length per metre of shortest path, aggregated the same way. It is not normalised by trip length, so it grows with it; compare it per bin. Data: Overture Maps via [city2graph](https://city2graph.net).
 
 ## Validation
 `notebooks/validation.ipynb` checks the metric on synthetic graphs (Part A) and on the polygons in

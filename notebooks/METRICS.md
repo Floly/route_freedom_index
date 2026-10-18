@@ -27,6 +27,7 @@ A bin is a stratum of pairs by Euclidean distance, `[lo, hi)` in meters. The las
 | `used` | `n_pairs ≥ MIN_PAIRS_PER_BIN` (50). If False, the bin is left out of RFI |
 | `median_r` | median of r = U/A over the bin's pairs: the share of streets you can actually use among the streets within geometric reach under the budget |
 | `iqr` | interquartile range of r (q75 − q25). Spread between pairs: a large value means the result depends on which pairs were sampled |
+| `median_u_over_dstar`, `iqr_u_over_dstar` | median and interquartile range of U/d* over the bin's pairs (see `redundancy` below). Grows with the bin's trip length |
 | `circuity` | median d*/euclid over the bin's pairs |
 | `candidates` | all pairs i<j among the sampled origins whose euclid falls in the bin, before any exclusion |
 | `unreachable` | candidates whose s and t are in different connected components (d* = ∞). Checked first |
@@ -51,6 +52,7 @@ Why `n_pairs` is small for the tree: the tree path is almost always longer than 
 | `U` | total length of usable edges: edges (u,v) with `min(d_s(u)+w+d_t(v), d_s(v)+w+d_t(u)) ≤ B` |
 | `A` | total length of edges whose both endpoints lie inside the ellipse with foci s, t and focal sum B |
 | `r` | U / A. Always ≤ 1 because U ⊆ A. Never clipped |
+| `u_over_dstar` | U / d*: metres of usable street per metre of shortest path (the "original" redundancy). Unbounded, and grows with trip length |
 
 ## `edge_freedom`
 
@@ -65,3 +67,12 @@ within the budget.
 - Low `n_pairs` or `used=False` in a long bin: too few pairs, do not trust that bin (typical for trees and heavily fragmented graphs).
 - Large `unreachable`: the graph is disconnected and part of the network does not take part in the metric.
 - Removing edges raises `circuity` and lowers `RFI`: the two signals agree.
+
+## `redundancy` (U/d*)
+
+A second area number saved next to the score (`Result.redundancy`, key `redundancy` in `result.json`).
+It is aggregated exactly like RFI: the median of `u_over_dstar` per bin, then the mean over the bins
+that are used. Unlike r = U/A it does not cancel trip length (in a uniform grid U grows roughly with
+d*² · density · √ε), so the area mean mixes short and long trips. Compare areas **per bin**
+(`median_u_over_dstar`), and use the area mean only for areas with the same bins used. Not the same as
+`RI_union` in `rfi/baselines.py`, which counts only edges on *simple* paths within budget.

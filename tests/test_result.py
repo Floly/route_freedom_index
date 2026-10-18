@@ -30,7 +30,8 @@ def _result(net) -> Result:
                              geometry=geom, crs=32631)
     return Result(res["score"], res["bins"], res["circuity"], res["pairs"], edges,
                   [{"step": "graph", "nodes": len(net.xy)}], res["diagnostics"],
-                  {"eps": 0.1, "seed": 0, "runtime_s": 0.1, "constants": {"DIST_BINS": C.DIST_BINS}})
+                  {"eps": 0.1, "seed": 0, "runtime_s": 0.1, "constants": {"DIST_BINS": C.DIST_BINS}},
+                  redundancy=res["redundancy"])
 
 
 def test_save_load_roundtrip(small, tmp_path):
@@ -45,6 +46,9 @@ def test_save_load_roundtrip(small, tmp_path):
     np.testing.assert_allclose(back.edges["edge_freedom"], res.edges["edge_freedom"])
     assert back.bins[0]["range_m"] == res.bins[0]["range_m"]
     assert back.diagnostics["r_gt_1"] == 0
+    assert back.redundancy == pytest.approx(res.redundancy) and res.redundancy > 0
+    assert back.bins[0]["median_u_over_dstar"] == pytest.approx(res.bins[0]["median_u_over_dstar"])
+    assert "u_over_dstar" in back.pairs.columns
 
 
 def test_nan_becomes_null_and_returns(small, tmp_path, monkeypatch):
@@ -85,3 +89,15 @@ def test_cli_score_invokes_pipeline(small, tmp_path, monkeypatch):
     assert "RFI =" in r.output and (out / "result.json").exists()
     bad = runner.invoke(cli.app, ["score", "--out", str(out)])
     assert bad.exit_code != 0
+
+
+def test_result_saved_before_redundancy_still_loads(small, tmp_path):
+    _result(small).save(tmp_path)
+    f = tmp_path / "result.json"
+    data = json.loads(f.read_text())
+    data.pop("redundancy")
+    for b in data["bins"]:
+        b.pop("median_u_over_dstar"), b.pop("iqr_u_over_dstar")
+    f.write_text(json.dumps(data))
+    back = Result.load(tmp_path)
+    assert math.isnan(back.redundancy) and math.isnan(back.bins[0]["median_u_over_dstar"])
